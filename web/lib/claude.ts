@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ChatMessage, TasteExtractResult, ReviewTags } from "./types";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const apiKey = process.env.ANTHROPIC_API_KEY ?? process.env.ANTHROPIC_KEY;
+const client = new Anthropic({ apiKey });
 
 const TASTE_DETECTIVE_SYSTEM = `당신은 관객의 취향을 발견하는 '취향 탐정'입니다.
 사용자의 과거 경험과 감각 반응을 질문해서 공연예술 취향을 파악합니다.

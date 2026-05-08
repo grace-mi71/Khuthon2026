@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import type { Hobby } from "./types";
-import { blendEmbeddings } from "./vector-client";
 
 // 취미 → 장르 매핑
 export const HOBBY_GENRE_MAP: Record<Hobby, string[]> = {
