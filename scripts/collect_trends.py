@@ -7,9 +7,10 @@ Naver News/Blog API + YouTube Data API v3 를 사용해
 실행:
     python scripts/collect_trends.py
 
-API 키 설정 (아래 상수에 직접 입력):
-    NAVER_CLIENT_ID, NAVER_CLIENT_SECRET  — developers.naver.com 에서 발급 (즉시)
-    YOUTUBE_API_KEY                        — console.cloud.google.com 에서 발급
+API 키 설정: 프로젝트 루트의 .env 파일에 다음 항목을 추가하세요.
+    NAVER_CLIENT_ID=...
+    NAVER_CLIENT_SECRET=...
+    YOUTUBE_API_KEY=...
 
 결과:
     data/trends.json — { "perf_id": { "trend_score": 0.72, "news": 14, "blogs": 31, "yt_views": 18400 } }
@@ -17,19 +18,24 @@ API 키 설정 (아래 상수에 직접 입력):
 
 import json
 import math
+import os
 import time
 import requests
 from datetime import datetime, timedelta
 from pathlib import Path
 from tqdm import tqdm
+from dotenv import load_dotenv
 from logger import get_logger
+
+# 프로젝트 루트의 .env 로드 (scripts/ 한 단계 위)
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 log = get_logger("collect_trends")
 
 # ── 설정 ──────────────────────────────────────────────────────────────
-NAVER_CLIENT_ID     = "여기에_네이버_CLIENT_ID_입력"
-NAVER_CLIENT_SECRET = "여기에_네이버_CLIENT_SECRET_입력"
-YOUTUBE_API_KEY     = "여기에_유튜브_API_KEY_입력"
+NAVER_CLIENT_ID     = os.environ.get("NAVER_CLIENT_ID", "")
+NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET", "")
+YOUTUBE_API_KEY     = os.environ.get("YOUTUBE_API_KEY", "")
 
 DATA_DIR       = Path(__file__).parent.parent / "data"
 KOPIS_RAW_PATH = DATA_DIR / "kopis_raw.json"
@@ -182,8 +188,8 @@ def collect_trends():
 
     remaining = [p for p in performances if p["id"] not in done_ids]
 
-    use_naver   = NAVER_CLIENT_ID     != "여기에_네이버_CLIENT_ID_입력"
-    use_youtube = YOUTUBE_API_KEY     != "여기에_유튜브_API_KEY_입력"
+    use_naver   = bool(NAVER_CLIENT_ID and NAVER_CLIENT_SECRET)
+    use_youtube = bool(YOUTUBE_API_KEY)
 
     if not use_naver:
         log.warning("Naver API 키 미설정 — news/blog 수집 생략 (trend_score 정확도 저하)")

@@ -2,11 +2,19 @@
 /docs/*
 /everything-claude-code/*
 
+# ── 노트북 (Colab API 키 하드코딩 가능성) ───────────────────────────────
+/notebooks/*
+
+# ── Claude Code 로컬 설정 ───────────────────────────────────────────────
+/.claude/
+
 # ── 환경 변수 / API 키 ──────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 *.env
+!*.env.example
+!.env.local.example
 
 # ── 데이터 (대용량 / 재생성 가능) ────────────────────────────────────────
 data/profiles.json
@@ -37,6 +45,8 @@ web/.next/
 web/out/
 web/node_modules/
 web/.vercel/
+web/next-env.d.ts
+web/tsconfig.tsbuildinfo
 
 # ── OS / 에디터 ─────────────────────────────────────────────────────────
 .DS_Store

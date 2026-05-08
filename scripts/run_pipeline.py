@@ -2,8 +2,12 @@
 딴길 데이터 파이프라인 — 로컬 H100 서버용
 
 실행:
-    pip install anthropic sentence-transformers tqdm requests
+    pip install anthropic sentence-transformers tqdm requests python-dotenv
     python scripts/run_pipeline.py
+
+API 키 설정: 프로젝트 루트의 .env 파일에 다음 항목을 추가하세요.
+    KOPIS_KEY=...
+    ANTHROPIC_KEY=...
 
 결과: data/ 폴더에 kopis_raw.json, profiles.json, embeddings.json, contents.json 생성
 """
@@ -17,16 +21,20 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import Counter
 from tqdm import tqdm
+from dotenv import load_dotenv
 import anthropic
 import torch
 from sentence_transformers import SentenceTransformer
 from logger import get_logger
 
+# 프로젝트 루트의 .env 로드 (scripts/ 한 단계 위)
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 log = get_logger("run_pipeline")
 
 # ── 설정 ──────────────────────────────────────────────────────────────
-KOPIS_KEY     = "여기에_KOPIS_API_키_입력"
-ANTHROPIC_KEY = "여기에_ANTHROPIC_API_키_입력"
+KOPIS_KEY     = os.environ.get("KOPIS_KEY", "")
+ANTHROPIC_KEY = os.environ.get("ANTHROPIC_KEY", "")
 
 DATA_DIR  = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -512,8 +520,10 @@ def build_contents():
 # ── 진입점 ────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    assert KOPIS_KEY     != "여기에_KOPIS_API_키_입력",     "KOPIS_KEY를 입력해주세요."
-    assert ANTHROPIC_KEY != "여기에_ANTHROPIC_API_키_입력", "ANTHROPIC_KEY를 입력해주세요."
+    if not KOPIS_KEY:
+        raise SystemExit("오류: KOPIS_KEY 가 설정되지 않았습니다. 루트 .env 파일을 확인하세요.")
+    if not ANTHROPIC_KEY:
+        raise SystemExit("오류: ANTHROPIC_KEY 가 설정되지 않았습니다. 루트 .env 파일을 확인하세요.")
 
     log.info("=" * 50)
     log.info("딴길 데이터 파이프라인")

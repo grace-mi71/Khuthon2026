@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@splinetool/react-spline": "^2.2.6",
+    "@splinetool/runtime": "^1.12.92",
     "@vercel/kv": "^3.0.0",
     "@vercel/postgres": "^0.10.0",
+    "lucide-react": "^1.14.0",
     "next": "14.2.29",
     "react": "^18",
     "react-dom": "^18"
@@ -20,6 +23,9 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5"
   }
 }

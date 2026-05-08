@@ -2,6 +2,19 @@ import { loadContents, cosineDist } from "./vector-client";
 import type { Performance, SearchResult, TasteStep } from "./types";
 import { STEP_RANGES } from "./types";
 
+// UI 단축명 → 데이터 전체명 매핑
+const REGION_MAP: Record<string, string> = {
+  "서울": "서울특별시",
+  "경기": "경기도",
+  "인천": "인천광역시",
+  "부산": "부산광역시",
+  "대구": "대구광역시",
+  "광주": "광주광역시",
+  "대전": "대전광역시",
+  "강원": "강원특별자치도",
+  "제주": "제주특별자치도",
+};
+
 export interface SearchOptions {
   step: TasteStep;
   region?: string;           // 지역 필터 (예: "서울")
@@ -21,13 +34,14 @@ export function searchByEmbedding(
   const { step, region, excludeIds = [], limit = 10, trendBonus = true } = opts;
   const [minDist, maxDist] = STEP_RANGES[step];
   const excludeSet = new Set(excludeIds);
+  const regionFull = region ? (REGION_MAP[region] ?? region) : undefined;
 
   const contents = loadContents();
   const results: SearchResult[] = [];
 
   for (const perf of contents) {
     if (excludeSet.has(perf.id)) continue;
-    if (region && perf.region !== region) continue;
+    if (regionFull && perf.region !== regionFull) continue;
     if (!perf.embedding || perf.embedding.length === 0) continue;
 
     const dist = cosineDist(tasteVec, perf.embedding);

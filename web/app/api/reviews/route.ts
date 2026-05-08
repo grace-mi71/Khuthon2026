@@ -64,20 +64,29 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const perfId = req.nextUrl.searchParams.get("perfId");
-  if (!perfId) return NextResponse.json({ error: "perfId 필요" }, { status: 400 });
+  if (!perfId) {
+    log.warn("perfId 누락");
+    return NextResponse.json({ error: "perfId 필요" }, { status: 400 });
+  }
 
-  const { rows } = await sql`
-    SELECT id, user_id, text, tags_json, created_at
-    FROM reviews
-    WHERE perf_id = ${perfId}
-    ORDER BY created_at DESC
-    LIMIT 50
-  `;
+  try {
+    const { rows } = await sql`
+      SELECT id, user_id, text, tags_json, created_at
+      FROM reviews
+      WHERE perf_id = ${perfId}
+      ORDER BY created_at DESC
+      LIMIT 50
+    `;
 
-  const reviews = rows.map((r) => ({
-    ...r,
-    tags: typeof r.tags_json === "string" ? JSON.parse(r.tags_json) : r.tags_json,
-  }));
+    const reviews = rows.map((r) => ({
+      ...r,
+      tags: typeof r.tags_json === "string" ? JSON.parse(r.tags_json) : r.tags_json,
+    }));
 
-  return NextResponse.json({ perfId, reviews });
+    log.info("리뷰 조회 완료", { perfId, count: reviews.length });
+    return NextResponse.json({ perfId, count: reviews.length, reviews });
+  } catch (e) {
+    log.error("리뷰 조회 실패", { perfId, error: String(e) });
+    return NextResponse.json({ error: "리뷰 조회 실패" }, { status: 500 });
+  }
 }
