@@ -188,8 +188,8 @@ def collect_trends():
 
     remaining = [p for p in performances if p["id"] not in done_ids]
 
-    use_naver   = NAVER_CLIENT_ID     != "여기에_네이버_CLIENT_ID_입력"
-    use_youtube = YOUTUBE_API_KEY     != "여기에_유튜브_API_KEY_입력"
+    use_naver   = bool(NAVER_CLIENT_ID and NAVER_CLIENT_SECRET)
+    use_youtube = bool(YOUTUBE_API_KEY)
 
     if not use_naver:
         log.warning("Naver API 키 미설정 — news/blog 수집 생략 (trend_score 정확도 저하)")
