@@ -47,6 +47,34 @@ export function SplineCanvas({ scene, className, style, disableScrollZoom = true
     return () => el.removeEventListener("wheel", onWheel, true);
   }, [disableScrollZoom]);
 
+  // 텍스트/UI 레이어가 캔버스 위를 덮더라도 마우스 커서 추적이 전체 영역에서 동작하도록
+  // window mousemove 이벤트를 캔버스에 중계한다.
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const forwardMouseMove = (e: MouseEvent) => {
+      const canvas = el.querySelector("canvas");
+      if (!canvas || e.target === canvas) return;
+      canvas.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: false,
+          cancelable: true,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          screenX: e.screenX,
+          screenY: e.screenY,
+          movementX: e.movementX,
+          movementY: e.movementY,
+          buttons: e.buttons,
+        })
+      );
+    };
+
+    window.addEventListener("mousemove", forwardMouseMove);
+    return () => window.removeEventListener("mousemove", forwardMouseMove);
+  }, []);
+
   return (
     <div ref={wrapperRef} className={className} style={style}>
       <Suspense fallback={<SplineFallback />}>

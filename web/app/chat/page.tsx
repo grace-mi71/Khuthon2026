@@ -7,7 +7,7 @@ import { StepHeader } from "@/components/layout/StepHeader";
 import { MessageBubble } from "@/components/ui/MessageBubble";
 import { Button } from "@/components/ui/Button";
 import { streamChat, finalize } from "@/lib/api-client";
-import { loadSession, updateSession } from "@/lib/storage";
+import { updateSession } from "@/lib/storage";
 import type { ChatMessage } from "@/lib/types";
 
 const SEED_GREETING: ChatMessage = {
@@ -31,14 +31,18 @@ export default function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 세션 가드
+  // 세션 가드 — HttpOnly 쿠키 기반
   useEffect(() => {
-    const s = loadSession();
-    if (!s?.userId) {
-      router.replace("/start");
-      return;
-    }
-    userIdRef.current = s.userId;
+    fetch("/api/auth/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.userId) {
+          router.replace("/start");
+          return;
+        }
+        userIdRef.current = data.userId;
+      })
+      .catch(() => router.replace("/start"));
   }, [router]);
 
   // 자동 스크롤

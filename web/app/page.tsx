@@ -21,7 +21,6 @@ interface JourneyStep {
   imgUrl: string;
 }
 
-// data/contents.json 에서 검증된 KOPIS 포스터
 const journeySteps: JourneyStep[] = [
   {
     id: 0,
@@ -30,7 +29,7 @@ const journeySteps: JourneyStep[] = [
     desc: "오페라의 유령, 위키드, 시카고",
     detail:
       "당신은 무대 위에서 폭발하는 에너지와 합창의 웅장함에 끌립니다.",
-    imgUrl: "http://www.kopis.or.kr/upload/pfmPoster/PF_PF290658_260506_101411.jpg",
+    imgUrl: "/journey/concert-stadium.jpg",
   },
   {
     id: 1,
@@ -39,7 +38,7 @@ const journeySteps: JourneyStep[] = [
     desc: "빈센트 반 고흐, 마타하리",
     detail:
       "위키드에서 좋았던 ‘웅장함’ 을 300석 극장에서 만나면 배우의 숨소리까지 직접 전해집니다.",
-    imgUrl: "http://www.kopis.or.kr/upload/pfmPoster/PF_PF290650_260504_180836.gif",
+    imgUrl: "/journey/black-box-theater.jpg",
   },
   {
     id: 2,
@@ -48,7 +47,7 @@ const journeySteps: JourneyStep[] = [
     desc: "음악극 〈판〉, 12인의 성난 사람들",
     detail:
       "뮤지컬에서 좋았던 ‘서사 몰입’ 을 대사와 판소리의 성량으로 새롭게 경험합니다.",
-    imgUrl: "http://www.kopis.or.kr/upload/pfmPoster/PF_PF290423_260430_104342.png",
+    imgUrl: "/journey/workshop.jpg",
   },
   {
     id: 3,
@@ -57,7 +56,7 @@ const journeySteps: JourneyStep[] = [
     desc: "이날치 라이브, 도시의 장단",
     detail:
       "판소리와 사물놀이의 에너지가 K-POP 군무보다 더 깊게 몸을 움직이게 합니다.",
-    imgUrl: "http://www.kopis.or.kr/upload/pfmPoster/PF_PF290135_260427_110601.png",
+    imgUrl: "/journey/hanok-village.jpg",
   },
 ];
 
@@ -84,19 +83,19 @@ export default function LandingPage() {
 
       {/* ──────────────── HERO ──────────────── */}
       <section className="relative min-h-screen overflow-hidden">
-        {/* Spline 전체 배경 — 절반 크기로 축소 + 오른쪽 정렬 */}
+        {/* Spline — 우측 배치 (scale 0.5, origin right) */}
         <SplineCanvas
           scene={SPLINE_SCENE}
           className="absolute inset-0 w-full h-full"
           style={{ transform: "scale(0.5)", transformOrigin: "right center" }}
         />
 
-        {/* 텍스트 가독성을 위한 그라디언트 — 40%까지만 흰색, 이후 빠르게 투명 */}
+        {/* 텍스트 가독성 + 중앙 경계 그라디언트 */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(to right, white 0%, white 35%, rgba(255,255,255,0.4) 48%, transparent 60%)",
+            background: "linear-gradient(to right, white 0%, white 32%, rgba(255,255,255,0.85) 42%, rgba(255,255,255,0.3) 55%, transparent 68%)",
           }}
         />
 

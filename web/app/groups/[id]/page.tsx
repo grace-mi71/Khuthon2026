@@ -10,7 +10,6 @@ import {
   sendGroupMessage,
   type GroupMessageRow,
 } from "@/lib/api-client";
-import { loadSession } from "@/lib/storage";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -31,16 +30,18 @@ export default function GroupChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const knownIds = useRef<Set<string>>(new Set());
 
-  // 초기 로드
+  // 초기 로드 — 세션 쿠키 확인 후 메시지 로드
   useEffect(() => {
-    const s = loadSession();
-    if (!s?.userId) {
-      router.replace("/start");
-      return;
-    }
-    userIdRef.current = s.userId;
     (async () => {
       try {
+        const sessRes = await fetch("/api/auth/session");
+        if (!sessRes.ok) {
+          router.replace("/start");
+          return;
+        }
+        const sess = await sessRes.json();
+        userIdRef.current = sess.userId;
+
         const r = await getGroupMessages(groupId);
         knownIds.current = new Set(r.messages.map((m) => m.id));
         setMessages(r.messages);

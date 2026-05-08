@@ -15,7 +15,6 @@ import {
   searchByEmbedding,
   type RecCard,
 } from "@/lib/api-client";
-import { loadSession, updateSession } from "@/lib/storage";
 import type { TasteStep } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
 
@@ -33,21 +32,20 @@ export default function RecommendationsPage() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 첫 진입 — landing recommendations 로 사용자 + 추천 동시 로드
+  // 첫 진입 — 세션 확인 후 landing recommendations 로드
   useEffect(() => {
-    const s = loadSession();
-    if (!s?.userId) {
-      router.replace("/start");
-      return;
-    }
     (async () => {
       try {
-        const r = await getLandingRecommendations(s.userId, 2);
+        const sessRes = await fetch("/api/auth/session");
+        if (!sessRes.ok) {
+          router.replace("/start");
+          return;
+        }
+        const sess = await sessRes.json();
+        const r = await getLandingRecommendations(sess.userId, 2);
         setEmbedding(r.embedding);
         setHobbies(r.hobbies);
         setResults(r.results);
-        // session 의 embedding 도 최신화
-        updateSession({ embedding: r.embedding });
       } catch (e) {
         setError(e instanceof Error ? e.message : "추천을 불러오지 못했습니다");
       } finally {

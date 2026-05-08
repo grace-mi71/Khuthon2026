@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -13,7 +13,6 @@ import {
   getPerformance, getReviews, submitReview,
   type ReviewRow,
 } from "@/lib/api-client";
-import { loadSession } from "@/lib/storage";
 import type { Performance, ReviewTags } from "@/lib/types";
 
 export default function PerformanceDetailPage() {
@@ -29,6 +28,14 @@ export default function PerformanceDetailPage() {
   const [reviewText, setReviewText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submittedTags, setSubmittedTags] = useState<ReviewTags | null>(null);
+  const userIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.userId) userIdRef.current = data.userId; })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -47,20 +54,20 @@ export default function PerformanceDetailPage() {
   async function onSubmit() {
     const text = reviewText.trim();
     if (!text || submitting) return;
-    const s = loadSession();
-    if (!s?.userId) {
+    const userId = userIdRef.current;
+    if (!userId) {
       router.push("/start");
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const r = await submitReview(s.userId, id, text);
+      const r = await submitReview(userId, id, text);
       setSubmittedTags(r.tags);
       setReviews((prev) => [
         {
           id: r.id,
-          user_id: s.userId,
+          user_id: userId,
           text,
           tags: r.tags,
           created_at: new Date().toISOString(),

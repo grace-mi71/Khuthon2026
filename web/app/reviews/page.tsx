@@ -9,7 +9,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { getMyReviews, type MyReviewRow } from "@/lib/api-client";
-import { loadSession } from "@/lib/storage";
 
 export default function MyReviewsPage() {
   const router = useRouter();
@@ -18,14 +17,15 @@ export default function MyReviewsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const s = loadSession();
-    if (!s?.userId) {
-      router.replace("/start");
-      return;
-    }
     (async () => {
       try {
-        const r = await getMyReviews(s.userId);
+        const sessRes = await fetch("/api/auth/session");
+        if (!sessRes.ok) {
+          router.replace("/start");
+          return;
+        }
+        const sess = await sessRes.json();
+        const r = await getMyReviews(sess.userId);
         setReviews(r.reviews);
       } catch (e) {
         setError(e instanceof Error ? e.message : "리뷰를 불러오지 못했습니다");

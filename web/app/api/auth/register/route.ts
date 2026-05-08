@@ -4,6 +4,7 @@ import { hobbiestoEmbedding } from "@/lib/hobby-map";
 import { encodeEmbedding } from "@/lib/vector-client";
 import { SentenceTransformerEmbedder } from "@/lib/embedder";
 import { createLogger } from "@/lib/logger";
+import { SESSION_COOKIE, SESSION_TTL } from "@/lib/session";
 import type { Hobby, UserProfile } from "@/lib/types";
 import { randomUUID } from "crypto";
 
@@ -35,6 +36,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, hobbies } = body as { email: string; hobbies: Hobby[] };
+
+  // 이메일 중복 체크
+  const existingId = await kv.get<string>(`email:${email}`);
+  if (existingId) {
+    log.warn("이미 가입된 이메일", { email });
+    return NextResponse.json({ error: "이미 가입된 이메일입니다" }, { status: 409 });
+  }
+
   log.info("회원가입 시작", { email, hobbies });
 
   const id = randomUUID();
@@ -81,14 +90,26 @@ export async function POST(req: NextRequest) {
 
   try {
     await kv.set(`user:${id}`, profile);
+    await kv.set(`email:${email}`, id);
     log.info("회원가입 완료", { userId: id, email });
   } catch (e) {
     log.error("KV 저장 실패", { userId: id, email, error: String(e) });
     return NextResponse.json({ error: "사용자 저장 실패" }, { status: 500 });
   }
 
-  return NextResponse.json({
+  // 세션 생성 + HttpOnly 쿠키 설정
+  const token = randomUUID();
+  await kv.set(`session:${token}`, { userId: id }, { ex: SESSION_TTL });
+
+  const res = NextResponse.json({
     userId: id,
     embedding: encodeEmbedding(tasteEmbedding),
   });
+  res.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL,
+  });
+  return res;
 }

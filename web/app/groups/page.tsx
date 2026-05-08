@@ -8,7 +8,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { getMyGroups, type GroupSummary } from "@/lib/api-client";
-import { loadSession } from "@/lib/storage";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -17,14 +16,15 @@ export default function GroupsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const s = loadSession();
-    if (!s?.userId) {
-      router.replace("/start");
-      return;
-    }
     (async () => {
       try {
-        const r = await getMyGroups(s.userId);
+        const sessRes = await fetch("/api/auth/session");
+        if (!sessRes.ok) {
+          router.replace("/start");
+          return;
+        }
+        const sess = await sessRes.json();
+        const r = await getMyGroups(sess.userId);
         setGroups(r.groups);
       } catch (e) {
         setError(e instanceof Error ? e.message : "그룹을 불러오지 못했습니다");
