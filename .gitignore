@@ -1,0 +1,45 @@
+# ── 문서 / 내부 도구 ────────────────────────────────────────────────────
+/docs/*
+/everything-claude-code/*
+
+# ── 환경 변수 / API 키 ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+
+# ── 데이터 (대용량 / 재생성 가능) ────────────────────────────────────────
+data/profiles.json
+data/embeddings.json
+data/contents.json
+data/genre_centroids.json
+data/trends.json
+# kopis_raw.json 은 300건 소량이라 포함
+
+# ── Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.log
+logs/
+
+# ── Jupyter ─────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Next.js ─────────────────────────────────────────────────────────────
+web/.next/
+web/out/
+web/node_modules/
+web/.vercel/
+
+# ── OS / 에디터 ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
