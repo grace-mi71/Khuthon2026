@@ -96,8 +96,12 @@ export async function extractReviewTags(reviewText: string): Promise<ReviewTags>
   return JSON.parse(raw);
 }
 
-/** 공유 태그로 그룹 이름 생성 */
+/** 공유 태그로 그룹 이름 생성 (태그 비어있으면 기본 이름 반환) */
 export async function generateGroupName(sharedTags: string[]): Promise<string> {
+  if (!sharedTags.length) {
+    return "취향 탐색가들";  // 채팅 finalize 전에 assign 된 경우 fallback
+  }
+
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 64,
@@ -105,5 +109,8 @@ export async function generateGroupName(sharedTags: string[]): Promise<string> {
     messages: [{ role: "user", content: `태그: ${sharedTags.join(", ")}` }],
   });
 
-  return response.content[0].text.trim().replace(/["']/g, "");
+  // 멀티라인/특수문자 제거하고 첫 줄만 사용
+  const raw = response.content[0].text.trim().split("\n")[0];
+  const clean = raw.replace(/["'`]/g, "").slice(0, 30);
+  return clean || "취향 탐색가들";
 }
