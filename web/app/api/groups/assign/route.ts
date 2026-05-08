@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { kv } from "@vercel/kv";
 import { sql } from "@vercel/postgres";
-import { cosineDist } from "@/lib/vector-client";
+import { cosineDist, blendEmbeddings } from "@/lib/vector-client";
 import { generateGroupName } from "@/lib/claude";
 import { createLogger } from "@/lib/logger";
 import type { UserProfile } from "@/lib/types";
@@ -122,8 +122,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "멤버 추가 실패" }, { status: 500 });
   }
 
+  // 기존 그룹에 합류한 경우 centroid 업데이트 (신규 멤버 취향 30% 반영)
+  if (assignedGroupId) {
+    const matchedGroup = existingGroups.find((g) => g.id === assignedGroupId);
+    if (matchedGroup) {
+      try {
+        const oldCentroid: number[] = JSON.parse(matchedGroup.centroid_embedding);
+        const newCentroid = blendEmbeddings(oldCentroid, profile.tasteEmbedding, 0.3);
+        await sql`
+          UPDATE groups SET centroid_embedding = ${JSON.stringify(newCentroid)}
+          WHERE id = ${assignedGroupId}
+        `;
+        log.info("그룹 centroid 업데이트", { groupId: assignedGroupId });
+      } catch (e) {
+        log.warn("centroid 업데이트 실패 (무시)", { error: String(e) });
+      }
+    }
+  }
+
   // UserProfile 에 groupId 추가
-  const updatedGroupIds = [...new Set([...profile.groupIds, assignedGroupId])];
+  const updatedGroupIds = [...new Set([...profile.groupIds, assignedGroupId!])];
   await kv.set(`user:${userId}`, {
     ...profile,
     groupIds: updatedGroupIds,

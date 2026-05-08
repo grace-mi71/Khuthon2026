@@ -7,25 +7,25 @@ import type { TasteStep } from "@/lib/types";
 const log = createLogger("api/recommend");
 
 /**
- * GET /api/recommend
- * Query params:
- *   embedding  — base64 Float32 벡터 (768차원)
- *   step       — 1~5 (취향 슬라이더)
- *   region     — (선택) 지역 필터
- *   exclude    — (선택) 쉼표로 구분된 공연 ID 목록
- *   limit      — (선택) 결과 수 (기본 10)
+ * POST /api/recommend
+ * Body: { embedding: base64, step: 1~5, region?, exclude?: string[], limit?: number }
+ *
+ * 기존 GET 방식에서 POST로 변경 (base64 임베딩이 ~4KB라 URL 초과 방지).
  */
-export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => null);
+  if (!body) {
+    return NextResponse.json({ error: "요청 body 필요" }, { status: 400 });
+  }
 
-  const b64 = searchParams.get("embedding");
-  const stepRaw = searchParams.get("step");
+  const { embedding: b64, step: stepRaw, region, exclude, limit: limitRaw } = body;
+
   if (!b64 || !stepRaw) {
     log.warn("파라미터 누락", { hasEmbedding: !!b64, hasStep: !!stepRaw });
     return NextResponse.json({ error: "embedding, step 파라미터 필요" }, { status: 400 });
   }
 
-  const step = parseInt(stepRaw) as TasteStep;
+  const step = Number(stepRaw) as TasteStep;
   if (![1, 2, 3, 4, 5].includes(step)) {
     log.warn("잘못된 step 값", { step });
     return NextResponse.json({ error: "step 은 1~5 사이여야 합니다" }, { status: 400 });
@@ -35,13 +35,12 @@ export async function GET(req: NextRequest) {
   try {
     tasteVec = decodeEmbedding(b64);
   } catch (e) {
-    log.error("embedding 디코딩 실패", { error: String(e), b64Length: b64.length });
+    log.error("embedding 디코딩 실패", { error: String(e) });
     return NextResponse.json({ error: "embedding 디코딩 실패" }, { status: 400 });
   }
 
-  const region = searchParams.get("region") ?? undefined;
-  const excludeIds = searchParams.get("exclude")?.split(",").filter(Boolean) ?? [];
-  const limit = parseInt(searchParams.get("limit") ?? "10");
+  const excludeIds: string[] = Array.isArray(exclude) ? exclude : [];
+  const limit = Number(limitRaw ?? 10);
 
   log.info("검색 시작", { step, region, excludeCount: excludeIds.length, limit });
 

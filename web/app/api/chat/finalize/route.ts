@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
     extracted = await extractTasteProfile(messages);
     log.info("취향 추출 완료", { userId, sensoryTagCount: extracted.sensory_tags.length });
   } catch (e) {
-    log.error("취향 추출 Claude 호출 실패", { userId, error: String(e) });
+    const msg = e instanceof Error ? e.message : String(e);
+    log.error("취향 추출 Claude 호출 실패", { userId, error: msg });
     return NextResponse.json({ error: "취향 분석 중 오류가 발생했습니다" }, { status: 500 });
   }
 

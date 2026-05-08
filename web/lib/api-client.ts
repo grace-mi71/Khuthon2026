@@ -172,11 +172,17 @@ export function searchByEmbedding(
   step: 1 | 2 | 3 | 4 | 5,
   opts: SearchOpts = {}
 ): Promise<RecommendResp> {
-  const qs = new URLSearchParams({ embedding, step: String(step) });
-  if (opts.region) qs.set("region", opts.region);
-  if (opts.excludeIds?.length) qs.set("exclude", opts.excludeIds.join(","));
-  if (opts.limit) qs.set("limit", String(opts.limit));
-  return jsonFetch<RecommendResp>(`/api/recommend?${qs}`);
+  return jsonFetch<RecommendResp>("/api/recommend", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      embedding,
+      step,
+      ...(opts.region && { region: opts.region }),
+      ...(opts.excludeIds?.length && { exclude: opts.excludeIds }),
+      ...(opts.limit && { limit: opts.limit }),
+    }),
+  });
 }
 
 // ── 그룹 ──────────────────────────────────────────────────────────────
