@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import HeroBg from '../components/HeroBg'
 
 interface CommItem {
   id: string; emoji: string; title: string; venue: string
@@ -26,6 +27,8 @@ const COMMUNITY: CommItem[] = [
 const REGION_FILTERS = ['전체', '서울', '경기', '인천', '부산', '광주', '대전', '강원', '전라북도', '경상북도', '제주']
 const GENRE_FILTERS  = ['전체', '연극', '전시', '콘서트', '버스킹', '국악', '체험']
 
+const THUMB_CLS = ['tg-photo-img--a', 'tg-photo-img--b', 'tg-photo-img--c', 'tg-photo-img--d', 'tg-photo-img--e', 'tg-photo-img--f']
+
 export default function OthersPage() {
   const [region, setRegion] = useState('전체')
   const [genre, setGenre] = useState('전체')
@@ -48,99 +51,142 @@ export default function OthersPage() {
 
   return (
     <div className="wrap">
-      {/* Header */}
-      <div className="page-header">
-        <Link href="/" className="back-btn">←</Link>
-        <span className="page-header-title">다른 사람들의 딴길</span>
+      {/* ── 사진형 히어로 ── */}
+      <HeroBg
+        className="tg-hero--others"
+        watermarks={[
+          { char: '他', pos: 'tl' },
+          { char: '群', pos: 'br', size: '9rem', opacity: 0.05 },
+        ]}
+      >
+        <Link href="/" className="tg-back">←</Link>
+        <div className="tg-hero-content">
+          <div className="tg-hero-stamp">
+            <span className="tg-hero-stamp-date">Community</span>
+            <span className="tg-hero-stamp-sub">Others' Tangil</span>
+          </div>
+          <div className="tg-hero-title">
+            다른 이의 길
+            <small>지역·장르로 탐색</small>
+          </div>
+        </div>
+      </HeroBg>
+
+      {/* ── 카운트 카드 ── */}
+      <div className="tg-greet">
+        <div>
+          <div className="tg-greet-name">발견된 딴길</div>
+          <div className="tg-greet-msg">{filtered.length}개의 길</div>
+        </div>
+        <div className="tg-greet-mark">他</div>
       </div>
 
-      <div className="content">
-        {/* 검색 */}
-        <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input
-            className="input"
-            placeholder="장소, 장르, 태그로 검색"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-        </div>
+      <div className="content" style={{ paddingTop: 28 }}>
 
-        {/* 지역 필터 */}
-        <div>
-          <div className="section-label" style={{ marginBottom: 8 }}>지역</div>
-          <div className="filter-bar">
-            {REGION_FILTERS.map(r => (
-              <button
-                key={r}
-                className={`fcip ${region === r ? 'on' : ''}`}
-                onClick={() => setRegion(r)}
-              >
-                {r}
-              </button>
-            ))}
+        {/* ── 검색 ── */}
+        <section>
+          <div className="search-wrap">
+            <span className="search-icon">🔍</span>
+            <input
+              className="input"
+              placeholder="장소, 장르, 태그로 검색"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
           </div>
-        </div>
+        </section>
 
-        {/* 장르 필터 */}
-        <div>
-          <div className="section-label" style={{ marginBottom: 8 }}>장르</div>
-          <div className="filter-bar">
-            {GENRE_FILTERS.map(g => (
-              <button
-                key={g}
-                className={`fcip ${genre === g ? 'on' : ''}`}
-                onClick={() => setGenre(g)}
-              >
-                {g}
-              </button>
-            ))}
+        {/* ── 필터 ── */}
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">필터</span>
+              <span className="tg-shead-title">지역과 장르로 좁히기</span>
+            </div>
+            <span className="tg-shead-deco">尋</span>
           </div>
-        </div>
 
-        {/* 결과 수 */}
-        <p style={{ fontSize: '.83rem', color: 'var(--text-3)', marginTop: -12 }}>
-          {filtered.length}개의 딴길
-        </p>
-
-        {/* 리스트 */}
-        {filtered.length === 0 ? (
-          <div className="empty">
-            <div className="empty-icon">🔍</div>
-            <div className="empty-title">검색 결과가 없어요</div>
-            <div className="empty-desc">다른 조건으로 검색해보세요</div>
+          <div style={{ marginBottom: 12 }}>
+            <div className="tg-eyebrow" style={{ marginBottom: 8 }}>지역</div>
+            <div className="filter-bar">
+              {REGION_FILTERS.map(r => (
+                <button
+                  key={r}
+                  className={`fcip ${region === r ? 'on' : ''}`}
+                  onClick={() => setRegion(r)}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          filtered.map(item => (
-            <div key={item.id} className="comm-card">
-              <div className="comm-row">
-                <div className="comm-thumb">{item.emoji}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="comm-title">{item.title}</div>
-                  <div className="comm-venue">📍 {item.venue} · {item.region}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                    <span
-                      className="comm-likes"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => toggleLike(item.id)}
-                    >
-                      {liked[item.id] ? '❤️' : '🤍'} {item.likes + (liked[item.id] ? 1 : 0)}
-                    </span>
-                    <span style={{ fontSize: '.75rem', color: 'var(--text-3)' }}>추천</span>
+
+          <div>
+            <div className="tg-eyebrow" style={{ marginBottom: 8 }}>장르</div>
+            <div className="filter-bar">
+              {GENRE_FILTERS.map(g => (
+                <button
+                  key={g}
+                  className={`fcip ${genre === g ? 'on' : ''}`}
+                  onClick={() => setGenre(g)}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 리스트 ── */}
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">발견된 길</span>
+              <span className="tg-shead-title">사람들이 걸어본 딴길</span>
+            </div>
+            <span className="tg-shead-deco tg-shead-deco--accent">路</span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="tg-empty">
+              <div className="tg-empty-mark">無</div>
+              <div className="tg-empty-title">검색 결과가 없어요</div>
+              <div className="tg-empty-desc">다른 조건으로 검색해보세요</div>
+            </div>
+          ) : (
+            <div className="tg-cards-2">
+              {filtered.map((item, i) => (
+                <div key={item.id} className="comm-card" style={{ borderRadius: 6 }}>
+                  <div className="comm-row">
+                    <div className={`tg-comm-thumb ${THUMB_CLS[i % THUMB_CLS.length]}`}>
+                      <span>{item.emoji}</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="tg-photo-genre" style={{ marginBottom: 3 }}>{item.genre}</div>
+                      <div className="comm-title">{item.title}</div>
+                      <div className="comm-venue">◦ {item.venue} · {item.region}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                        <span
+                          className="comm-likes"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => toggleLike(item.id)}
+                        >
+                          {liked[item.id] ? '❤️' : '🤍'} {item.likes + (liked[item.id] ? 1 : 0)}
+                        </span>
+                        <span style={{ fontSize: '.72rem', color: 'var(--text-3)', letterSpacing: '.05em' }}>추천</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="comm-tags">
+                    {item.tags.map(t => (
+                      <span key={t} className="comm-tag">{t}</span>
+                    ))}
                   </div>
                 </div>
-              </div>
-              <div className="comm-tags">
-                <span className="comm-tag" style={{ background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 600 }}>
-                  {item.genre}
-                </span>
-                {item.tags.map(t => (
-                  <span key={t} className="comm-tag">{t}</span>
-                ))}
-              </div>
+              ))}
             </div>
-          ))
-        )}
+          )}
+        </section>
       </div>
     </div>
   )

@@ -2,14 +2,15 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import HeroBg from '../components/HeroBg'
 
 // ── 상수 ──────────────────────────────────────────────────────────────────
 
 const TRENDING = [
-  { id: 't1', emoji: '🎭', title: '킹키부츠', venue: '샤롯데씨어터', genre: '뮤지컬', tags: '#화려함 #에너지' },
-  { id: 't2', emoji: '🎨', title: '이날치 특별공연', venue: '세종문화회관', genre: '콘서트', tags: '#국악팝 #독특함' },
-  { id: 't3', emoji: '🖼️', title: 'REAL DMZ PROJECT', venue: '문화역서울284', genre: '전시', tags: '#역사 #설치미술' },
-  { id: 't4', emoji: '🎬', title: '전주 국제영화제', venue: '전주시 일원', genre: '영화제', tags: '#독립영화 #감성' },
+  { id: 't1', emoji: '🎭', title: '킹키부츠', venue: '샤롯데씨어터', genre: '뮤지컬', tags: '#화려함 #에너지', cls: 'tg-photo-img--a' },
+  { id: 't2', emoji: '🎨', title: '이날치 특별공연', venue: '세종문화회관', genre: '콘서트', tags: '#국악팝 #독특함', cls: 'tg-photo-img--b' },
+  { id: 't3', emoji: '🖼️', title: 'REAL DMZ PROJECT', venue: '문화역서울284', genre: '전시', tags: '#역사 #설치미술', cls: 'tg-photo-img--c' },
+  { id: 't4', emoji: '🎬', title: '전주 국제영화제', venue: '전주시 일원', genre: '영화제', tags: '#독립영화 #감성', cls: 'tg-photo-img--d' },
 ]
 
 const REASONS = [
@@ -30,15 +31,18 @@ const STEP_DESCS = [
   '완전히 색다른 파격적인',
 ]
 
+// 결과 사진 클래스 순환
+const PHOTO_CLS = ['tg-photo-img--a', 'tg-photo-img--b', 'tg-photo-img--c', 'tg-photo-img--d', 'tg-photo-img--e', 'tg-photo-img--f']
+
 // ── 결과 데이터 ─────────────────────────────────────────────────────────────
 
 interface Result {
   id: string; emoji: string; title: string; venue: string
   genre: string; region: string; price: string; tags: string[]
   desc: string
-  vibes: string[]   // 느낌 키워드 — 관심 장소 텍스트와 매칭
-  stepMin: number   // 이 결과가 적합한 딴길 지수 최솟값 (1~5)
-  stepMax: number   // 이 결과가 적합한 딴길 지수 최댓값 (1~5)
+  vibes: string[]
+  stepMin: number
+  stepMax: number
 }
 
 const POOL: Result[] = [
@@ -83,10 +87,6 @@ const POOL: Result[] = [
 ]
 
 // ── 추천 로직 ────────────────────────────────────────────────────────────────
-// 1) 선택한 지역으로 hard-filter
-// 2) 관심 장소 텍스트 + 끌린 이유를 키워드로 분해해 vibes 매칭
-// 3) 딴길 지수(step)와의 근접도 점수
-// → 종합 점수 상위 4개 반환
 
 function getResults(step: number, region: string, interest: string, reasons: string[]): Result[] {
   const keywords = [
@@ -96,7 +96,6 @@ function getResults(step: number, region: string, interest: string, reasons: str
 
   let pool = [...POOL]
 
-  // 지역 hard-filter (결과 없으면 유지)
   if (region !== '전체') {
     const regional = pool.filter(r => r.region === region)
     if (regional.length > 0) pool = regional
@@ -105,7 +104,6 @@ function getResults(step: number, region: string, interest: string, reasons: str
   const scored = pool.map(r => {
     let score = 0
 
-    // step 적합도 (범위 안: +10, 벗어날수록 감점)
     if (step >= r.stepMin && step <= r.stepMax) {
       score += 10
     } else {
@@ -113,7 +111,6 @@ function getResults(step: number, region: string, interest: string, reasons: str
       score += Math.max(0, 6 - Math.abs(step - mid) * 2)
     }
 
-    // 키워드 매칭 (+3 per hit)
     if (keywords.length > 0) {
       score += keywords.filter(kw =>
         r.vibes.some(v => v.includes(kw)) ||
@@ -149,7 +146,6 @@ export default function FindPage() {
   const reasonRef = useRef<HTMLDivElement>(null)
   const resultRef = useRef<HTMLDivElement>(null)
 
-  // 관심 장소에 텍스트가 있으면 '끌린 이유' 섹션 항상 표시
   const showFollow = interest.trim().length > 0
 
   const toggleReason = (r: string) =>
@@ -186,47 +182,83 @@ export default function FindPage() {
 
   return (
     <div className="wrap">
-      <div className="page-header">
-        <Link href="/" className="back-btn">←</Link>
-        <span className="page-header-title">딴길 찾기</span>
-      </div>
+      {/* ── 사진형 히어로 ── */}
+      <HeroBg
+        className="tg-hero--find"
+        watermarks={[
+          { char: '尋', pos: 'tl' },
+          { char: '路', pos: 'br', size: '9rem', opacity: 0.05 },
+        ]}
+      >
+        <Link href="/" className="tg-back">←</Link>
+        <div className="tg-hero-content">
+          <div className="tg-hero-stamp">
+            <span className="tg-hero-stamp-date">Discover</span>
+            <span className="tg-hero-stamp-sub">Local Culture</span>
+          </div>
+          <div className="tg-hero-title">
+            딴길 찾기
+            <small>유행을 지금 여기로</small>
+          </div>
+        </div>
+      </HeroBg>
 
-      <div className="content">
+      <div className="content" style={{ paddingTop: 28 }}>
 
         {/* ── 요즘 뜨는 딴길 ── */}
-        <div>
-          <div className="section-label">요즘 뜨는 딴길</div>
-          <div className="h-scroll">
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">요즘 뜨는</span>
+              <span className="tg-shead-title">지금 화제의 딴길</span>
+            </div>
+            <span className="tg-shead-deco">多 感</span>
+          </div>
+          <div className="h-scroll" style={{ marginTop: -4 }}>
             {TRENDING.map(t => (
-              <div key={t.id} className="trend-card">
-                <div className="trend-emoji">{t.emoji}</div>
-                <div className="trend-title">{t.title}</div>
-                <div className="trend-venue">{t.venue}</div>
-                <div className="trend-tag">{t.tags}</div>
+              <div key={t.id} className="tg-trend-card">
+                <div className={`tg-trend-img ${t.cls}`}>
+                  <span>{t.emoji}</span>
+                </div>
+                <div className="tg-trend-body">
+                  <div className="tg-trend-genre">{t.genre}</div>
+                  <div className="tg-trend-title">{t.title}</div>
+                  <div className="tg-trend-venue">{t.venue}</div>
+                  <div className="tg-trend-tags">{t.tags}</div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <hr className="divider" />
+        </section>
 
         {/* ── 관심 장소 ── */}
-        <div>
-          <div className="section-title">요새 관심 있는 장소가 있나요?</div>
-          <div className="section-desc">찾아가고 싶은 공간·동네·장르를 자유롭게 적어주세요</div>
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">끌림 입력</span>
+              <span className="tg-shead-title">관심 있는 장소가 있나요?</span>
+            </div>
+            <span className="tg-shead-deco tg-shead-deco--accent">心</span>
+          </div>
+          <p className="section-desc" style={{ marginTop: -8 }}>찾아가고 싶은 공간·동네·장르를 자유롭게 적어주세요</p>
           <input
             className="input"
             placeholder="예) 홍대 소극장, 바닷가, 클래식 공연..."
             value={interest}
             onChange={e => setInterest(e.target.value)}
           />
-        </div>
+        </section>
 
-        {/* ── 끌린 이유 — 관심 장소 입력 시 항상 표시 ── */}
+        {/* ── 끌린 이유 ── */}
         {showFollow && (
-          <div ref={reasonRef}>
-            <div className="section-title">어떤 점에 끌리셨나요?</div>
-            <div className="section-desc">여러 개 선택 가능해요</div>
+          <section ref={reasonRef}>
+            <div className="tg-shead">
+              <div className="tg-shead-left">
+                <span className="tg-eyebrow">끌림 분석</span>
+                <span className="tg-shead-title">어떤 점에 끌리셨나요?</span>
+              </div>
+              <span className="tg-shead-deco">感</span>
+            </div>
             <div className="chip-grid">
               {REASONS.map(r => (
                 <button
@@ -246,14 +278,20 @@ export default function FindPage() {
                 onChange={e => setOtherReason(e.target.value)}
               />
             </div>
-          </div>
+          </section>
         )}
 
         {/* ── 조건 설정 ── */}
-        <div>
-          <div className="section-title">조건 설정</div>
-          <div className="field-group">
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">지금 조건</span>
+              <span className="tg-shead-title">어디서, 얼마로?</span>
+            </div>
+            <span className="tg-shead-deco">地 時</span>
+          </div>
 
+          <div className="field-group">
             <div>
               <label className="field-label">예산</label>
               <select className="input" value={budget} onChange={e => setBudget(e.target.value)}>
@@ -303,55 +341,93 @@ export default function FindPage() {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* ── 딴길 지수 슬라이더 ── */}
-        <div>
-          <div className="section-title">딴길 지수</div>
-          <div className="section-desc">얼마나 색다른 경험을 원하시나요?</div>
-          <div className="slider-display">
-            <div className="slider-display-main">{STEP_LABELS[step - 1]} 딴길</div>
-            <div className="slider-display-sub">{STEP_DESCS[step - 1]} 경험을 추천드려요</div>
+        {/* ── 딴길 지수 ── */}
+        <section>
+          <div className="tg-shead">
+            <div className="tg-shead-left">
+              <span className="tg-eyebrow">딴길 지수</span>
+              <span className="tg-shead-title">얼마나 색다른 경험을?</span>
+            </div>
+            <span className="tg-shead-deco tg-shead-deco--accent">度</span>
           </div>
-          <input
-            type="range" className="slider"
-            min={1} max={5} step={1}
-            value={step}
-            onChange={e => setStep(Number(e.target.value))}
-          />
-          <div className="slider-labels">
-            {STEP_LABELS.map((l, i) => (
-              <div key={l} className={`slider-lbl ${step === i + 1 ? 'on' : ''}`}>{l}</div>
-            ))}
+
+          <div className="tg-step">
+            <div className="tg-step-display">
+              <div className="tg-step-meter">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <span
+                    key={i}
+                    className={`tg-step-pip ${i <= step ? 'on' : ''} ${i === step ? 'now' : ''}`}
+                  />
+                ))}
+              </div>
+              <div className="tg-step-main">{STEP_LABELS[step - 1]} 딴길</div>
+              <div className="tg-step-sub">{STEP_DESCS[step - 1]} 경험을 추천드려요</div>
+            </div>
+
+            <div className="tg-step-track">
+              <input
+                type="range"
+                className="tg-step-slider"
+                style={{ ['--progress' as string]: `${((step - 1) / 4) * 100}%` }}
+                min={1}
+                max={5}
+                step={1}
+                value={step}
+                onChange={e => setStep(Number(e.target.value))}
+              />
+            </div>
+
+            <div className="tg-step-labels">
+              {STEP_LABELS.map((l, i) => (
+                <button
+                  type="button"
+                  key={l}
+                  className={`tg-step-label ${step === i + 1 ? 'on' : ''}`}
+                  onClick={() => setStep(i + 1)}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* ── 추천받기 ── */}
-        <button className="btn btn-primary" onClick={handleRecommend}>
+        <button className="tg-btn-primary" onClick={handleRecommend}>
           ✨ 딴길 추천받기
         </button>
 
-        {/* ── 추천 결과 ── */}
+        {/* ── 추천 결과 — 사진형 카드 ── */}
         {results && (
-          <div ref={resultRef}>
-            <div className="section-label">추천 결과</div>
-            <div className="section-title" style={{ marginBottom: 4 }}>
-              {interest ? `"${interest}" 느낌의 딴길이에요` : '이런 딴길 어떠세요?'}
+          <section ref={resultRef}>
+            <div className="tg-shead">
+              <div className="tg-shead-left">
+                <span className="tg-eyebrow">추천 결과</span>
+                <span className="tg-shead-title">
+                  {interest ? `"${interest}" 느낌의 딴길` : '이런 딴길 어떠세요?'}
+                </span>
+              </div>
+              <span className="tg-shead-deco tg-shead-deco--accent">薦</span>
             </div>
             {region !== '전체' && (
-              <p style={{ fontSize: '.83rem', color: 'var(--text-3)', marginBottom: 14 }}>
-                📍 {region} 내 추천
+              <p style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 14, letterSpacing: '.05em' }}>
+                ◦ {region} 내 추천
               </p>
             )}
-            <div className="result-grid">
-              {results.map(r => (
-                <div key={r.id} className="result-card">
-                  <div className="result-thumb">{r.emoji}</div>
-                  <div className="result-body">
-                    <span className="result-genre">{r.genre}</span>
-                    <div className="result-title">{r.title}</div>
-                    <div className="result-venue">{r.venue}</div>
-                    <div className="result-price">{r.price}</div>
+            <div className="tg-cards-4">
+              {results.map((r, i) => (
+                <div key={r.id} className="tg-photo-card">
+                  <div className={`tg-photo-img ${PHOTO_CLS[i % PHOTO_CLS.length]}`}>
+                    <span>{r.emoji}</span>
+                  </div>
+                  <div className="tg-photo-body">
+                    <div className="tg-photo-genre">{r.genre}</div>
+                    <div className="tg-photo-title">{r.title}</div>
+                    <div className="tg-photo-venue">{r.venue}</div>
+                    <div className="tg-photo-tag">{r.price}</div>
                     <div className="result-tags">
                       {r.tags.map(t => <span key={t} className="result-tag">{t}</span>)}
                     </div>
@@ -366,7 +442,7 @@ export default function FindPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
       </div>
 
