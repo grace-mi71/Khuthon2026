@@ -79,7 +79,9 @@ export async function extractTasteProfile(
     ],
   });
 
-  const raw = response.content[0].text.trim();
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Claude 응답이 텍스트가 아님");
+  const raw = block.text.trim();
   return JSON.parse(raw);
 }
 
@@ -92,7 +94,9 @@ export async function extractReviewTags(reviewText: string): Promise<ReviewTags>
     messages: [{ role: "user", content: reviewText }],
   });
 
-  const raw = response.content[0].text.trim();
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Claude 응답이 텍스트가 아님");
+  const raw = block.text.trim();
   return JSON.parse(raw);
 }
 
@@ -110,7 +114,9 @@ export async function generateGroupName(sharedTags: string[]): Promise<string> {
   });
 
   // 멀티라인/특수문자 제거하고 첫 줄만 사용
-  const raw = response.content[0].text.trim().split("\n")[0];
+  const block = response.content[0];
+  if (block.type !== "text") return "취향 탐색가들";
+  const raw = block.text.trim().split("\n")[0];
   const clean = raw.replace(/["'`]/g, "").slice(0, 30);
   return clean || "취향 탐색가들";
 }
